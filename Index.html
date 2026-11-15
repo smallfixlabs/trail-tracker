@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Trial Tracker</title>
+<style>
+body{font-family:sans-serif;background:#f3f4fa;max-width:500px;margin:auto;padding:14px}
+.c{background:#fff;border-radius:12px;padding:12px;margin:10px 0}
+input,button{font-size:1.1rem;padding:12px;width:100%;box-sizing:border-box;margin:4px 0;border-radius:10px}
+input{border:1px solid #aaa}
+button{background:#3949ab;color:#fff;border:0}
+.i{border-left:8px solid #2e7d32;background:#fff;padding:10px;margin:8px 0;border-radius:8px}
+.r{border-color:#c62828}.a{border-color:#ef8f00}
+</style></head><body>
+<h1>Trial Tracker</h1>
+<div class="c" id="t"></div>
+<form class="c" id="f">
+<input id="n" placeholder="Service, e.g. Netflix" required>
+<input id="p" type="number" step="0.01" min="0" placeholder="Price after the trial ($)">
+<label for="d">Trial ends on</label>
+<input id="d" type="date" required>
+<button>Add trial</button>
+</form>
+<div id="l"></div>
+<small>Enter the day your trial ends, and cancel before then.</small>
+<script>
+const $=i=>document.getElementById(i),
+left=x=>Math.round((new Date(x.d+"T00:00")-new Date().setHours(0,0,0,0))/864e5),
+esc=s=>String(s).replace(/</g,"&lt;");
+let L=JSON.parse(localStorage.tt||"[]");
+$("f").onsubmit=e=>{
+e.preventDefault();
+L.push({n:$("n").value.trim(),p:$("p").value,d:$("d").value});
+$("n").value=$("p").value=$("d").value="";
+save()};
+function del(i){L.splice(i,1);save()}
+function save(){localStorage.tt=JSON.stringify(L);draw()}
+function alarm(i){
+const x=L[i],
+t=["BEGIN:VCALENDAR","VERSION:2.0","BEGIN:VEVENT","UID:"+Date.now()+"@trialtracker",
+"DTSTAMP:"+new Date().toISOString().replace(/[-:]|\.\d+/g,""),
+"DTSTART;VALUE=DATE:"+x.d.replace(/-/g,""),
+"SUMMARY:Cancel "+x.n.replace(/[,;\n]/g," ")+" trial",
+"BEGIN:VALARM","TRIGGER:-PT15H","ACTION:DISPLAY","DESCRIPTION:Trial ends tomorrow","END:VALARM",
+"END:VEVENT","END:VCALENDAR"].join("\r\n"),
+a=document.createElement("a");
+a.href=URL.createObjectURL(new Blob([t],{type:"text/calendar"}));
+a.download="cancel-trial.ics";
+a.click()}
+function draw(){
+L.sort((a,b)=>left(a)-left(b));
+const w=x=>{const n=left(x);return n<0?"ended "+(-n)+" day(s) ago":n?n+" day(s) left":"ends today"};
+$("t").innerHTML=L.length?"<b>Cancel first:</b> "+esc(L[0].n)+", "+w(L[0]):"No trials yet. Add one below.";
+$("l").innerHTML=L.map((x,i)=>`<div class="i ${left(x)<2?"r":left(x)<4?"a":""}"><b>${esc(x.n)}</b>${x.p?" ($"+esc(x.p)+" after the trial)":""}<br>${w(x)}<button onclick="alarm(${i})">Add calendar alert</button><button onclick="del(${i})" style="background:#777">Cancelled it</button></div>`).join("")}
+draw()
+</script></body></html>
