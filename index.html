@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="manifest" href="manifest.json">
 <title>Trial Tracker</title>
 <style>
 body{font-family:sans-serif;background:#f3f4fa;max-width:500px;margin:auto;padding:14px}
@@ -52,4 +53,6 @@ const w=x=>{const n=left(x);return n<0?"ended "+(-n)+" day(s) ago":n?n+" day(s) 
 $("t").innerHTML=L.length?"<b>Cancel first:</b> "+esc(L[0].n)+", "+w(L[0]):"No trials yet. Add one below.";
 $("l").innerHTML=L.map((x,i)=>`<div class="i ${left(x)<2?"r":left(x)<4?"a":""}"><b>${esc(x.n)}</b>${x.p?" ($"+esc(x.p)+" after the trial)":""}<br>${w(x)}<button onclick="alarm(${i})">Add calendar alert</button><button onclick="del(${i})" style="background:#777">Cancelled it</button></div>`).join("")}
 draw()
-</script></body></html>
+</script>
+<script>if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js')</script>
+</body></html>
